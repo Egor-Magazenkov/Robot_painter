@@ -1,0 +1,105 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[russian]{babel}
+\usepackage{ textcomp }
+\usepackage[a4paper, total={170mm,257mm}, left=20mm, right=20mm, top=15mm, bottom=15mm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{subcaption}
+\usepackage{floatflt}
+\usepackage{graphicx}
+\usepackage[unicode, pdftex]{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric}
+\usetikzlibrary{decorations.markings}
+\usetikzlibrary{calc}
+\usetikzlibrary{intersections}
+\usepackage{caption}  % in preamble
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\usepackage{listings}
+
+%opening
+\title{}
+\author{}
+
+\begin{document}
+
+\section{Элементы лица}
+Для обнаружения и выделения частей лица, таких как подбородок, рот, нос, глаза и брови, использовалось решение от Google: библиотека \textit{mediapipe}. Она позволяет найти точки элементов лица (Рис.~\ref{facemesh}), которые впоследствии достаются и записываются в последовательные пути (Рис.~\ref{face_elements}). 
+
+\begin{figure}[h!]
+	\centering
+	\begin{subfigure}{0.49\linewidth}
+			\includegraphics[width=\linewidth]{"mask_ex.png"}
+		\caption{Facemesh} \label{facemesh}
+	\end{subfigure}
+	\begin{subfigure}{0.49\linewidth}
+		\includegraphics[width=\linewidth]{"mask_.png"}
+		\caption{Элементы лица} \label{face_elements}
+	\end{subfigure}
+	\caption{Процесс рисования элементов лица}
+\end{figure}
+
+\section{Основные черты лица}
+Далее при помощи преобразования Габора производится выделение основных черт лица (Рис.~\ref{gabor}). Параметры можно изменять при помощи ползунков для просмотра реззультатов фильтра в реальном времени. Полученные части проходят процесс скелетонизации (при помощи функции \textit{cv2.ximgproc.thinning}), а затем методом \textit{cv2.getContours} точки упорядочиваются для дальнейшей передачи роботу.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.5\linewidth]{"man_gabor.png"}
+	\caption{Основные черты} \label{gabor}
+\end{figure}
+
+\section{Обработка изображения}
+Следующим этапом является обработка изображения. В качестве предобработки изображений для последующего более точного применения фильтров поиска границ, используются два подхода. 
+Первый подход призван удалять тени с лица (Рис. \ref{img_tr}), например, для дальнейшего отделения затененной части лица от волос. Процедура стандартна: перевод изображения в ЧБ формат, использование \textit{Gaussian blur}, а затем \textit{division normalization}. 
+Второй подход призван повысить яркость и четкость изображения (Рис. \ref{adj_br}). Она трансформирует яркость изображения до заданного значения равномерно (линейным преобразованием)
+\begin{figure}[h!]
+	\centering
+	\begin{subfigure}{0.49\linewidth}
+		\includegraphics[width=\linewidth]{"img_transform.png"}
+		\caption{Результат этапа удаления теней} \label{img_tr}
+	\end{subfigure}
+	\begin{subfigure}{0.49\linewidth}
+		\includegraphics[width=\linewidth]{"adjust_brightness.png"}
+		\caption{Результат этапа установки яркости} \label{adj_br}
+	\end{subfigure}
+	\caption{Процесс обработки изображения}
+\end{figure}
+
+\section{Мелкие детали}
+Для нахождения мелких (но важных) деталей используется метод нахождения границ \textit{Canny edge detection}, параметры которого вынесены в ползунки, позволяющие добиться результатов, подходящих человеку, который послал фото. Для того, чтобы не засорять лицо ненужными деталями, производится удаление лишних деталей. Далее находятся пути для каждого из мазков при помощи метода \textit{cv2.getContour}. Результат представлен на рисунке \ref{canny}.
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.5\linewidth]{"canny.png"}
+	\caption{Мелкие детали} \label{canny}
+\end{figure}
+
+\section{Итоговое изображение}
+Объединяя данные этапы, получается картинка, по которой можно узнать человека. Примеры можно увидеть на рисунках \ref{examples}
+\begin{figure}[h!]
+	\centering
+	\begin{subfigure}{0.49\linewidth}
+		\includegraphics[width=\linewidth]{"Dicaprio.jpeg"}
+		\caption{Леонардо Ди Каприо} \label{dicaprio}
+	\end{subfigure}
+	\begin{subfigure}{0.49\linewidth}
+		\includegraphics[width=\linewidth]{"Kianu_Rivz.jpeg"}
+		\caption{Киану Ривз} \label{rivz}
+	\end{subfigure}
+	\begin{subfigure}{0.49\linewidth}
+	\includegraphics[width=\linewidth]{"Messi.jpeg"}
+	\caption{Лионель Месси} \label{messi}
+	\end{subfigure}
+	\begin{subfigure}{0.49\linewidth}
+		\includegraphics[width=\linewidth]{"Jack-the-sparrow.jpeg"}
+		\caption{Капитан Джек Воробей} \label{jack-the-sparrow}
+	\end{subfigure}
+
+	\caption{Некоторые результаты}\label{examples}
+\end{figure}
+\end{document}
