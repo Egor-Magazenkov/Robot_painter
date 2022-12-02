@@ -1,12 +1,9 @@
 import json
 import cv2
-import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button
 from matplotlib.patches import Rectangle
-import mediapipe as mp
-import math
 from tkinter import filedialog, Tk
 
 

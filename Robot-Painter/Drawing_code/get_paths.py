@@ -1,12 +1,8 @@
-from cv2 import imshow
 import cv2
 import numpy as np
-from matplotlib import pyplot as plt
-import csv
 import sys
 import os
 import roboticstoolbox.tools.trajectory as rtb
-import time
 import pickle
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))

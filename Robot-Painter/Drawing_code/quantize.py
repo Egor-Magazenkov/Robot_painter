@@ -64,16 +64,17 @@ if __name__ == '__main__':
     res = center[label.flatten()]
     res2 = res.reshape((img.shape))
     res3 = cv2.cvtColor(res2, cv2.COLOR_Lab2BGR)
-    
+
     center = cv2.cvtColor(np.array([center], np.uint8), cv2.COLOR_LAB2BGR)
     idx = generate_colors_order(center)
     plot_palette(center[0][idx], 'centers')
 
     
-    cv2.imshow('res', res3)
-    cv2.imshow('res with contours', img_with_branch_2)
+    cv2.imshow('Quantized image', res3)
+    cv2.imshow('Contours on image', img_with_branch_2)
+    cv2.imwrite('./quantized_image.png', res3)
     cv2.imwrite('./mask.jpg', out1)
     cv2.imwrite('./branch.jpg', img_with_branch)
-
+    
     cv2.waitKey(0)
     cv2.destroyAllWindows()
