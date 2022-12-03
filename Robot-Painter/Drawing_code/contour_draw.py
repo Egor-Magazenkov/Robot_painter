@@ -62,7 +62,7 @@ def convert_path(path):
     
 def draw_paths(paths):
     canvas.add_patch(Rectangle((0, 0), canvas_size, canvas_size, fill = False))
-    zeros = cv2.flip(cv2.cvtColor(cv2.imread('/home/leo/Downloads/result.jpg'), cv2.COLOR_BGR2RGB), 0)
+    zeros = cv2.resize(cv2.flip(cv2.cvtColor(cv2.imread('./result.png'), cv2.COLOR_BGR2RGB), 0), (400,400))
     canvas.imshow(zeros)
     cnt = 0
     for path in paths:
@@ -113,7 +113,7 @@ def img_to_square(img):
     x=y=max(img.shape[0], img.shape[1])
     square= np.ones((x,y), np.uint8)*255
     square[int((y-img.shape[0])/2):int(y-(y-img.shape[0])/2), int((x-img.shape[1])/2):int(x-(x-img.shape[1])/2)] = img
-    square = cv2.resize(square, (1920, 1920))
+    square = cv2.resize(square, (400, 400))
     return square
 
 
@@ -237,7 +237,7 @@ open_button = Button(open_button_axes, 'Открыть',color="cyan")
 def open_file(val):
     global filename, filepath
     Tk().withdraw()
-    path_to_file = filedialog.askopenfilename(initialdir = "/home/leo/Downloads/Painter_exhibition/",title = "Выберите фото",\
+    path_to_file = filedialog.askopenfilename(title = "Выберите фото",\
         filetypes=(("Фотографии", "*.jpg"), ("Фотографии", "*.png"), ("Фотографии", "*.jpeg")))
     filename = path_to_file.split('/')[-1]
     filepath = path_to_file.split(filename)[0]

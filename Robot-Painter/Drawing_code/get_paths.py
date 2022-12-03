@@ -41,28 +41,6 @@ def check_area(cnt):
 
     return 	cv2.contourArea(cnt) > PROHIBITED_AREA
 
-def check_intersect(cnt):
-    global binary_mask
-    global filled_contour
-    cnt = reshape_contour(cnt)
-    for point in cnt:
-        if binary_mask[int(point[0])][int(point[1])] == 0:
-            return True
-    return False
-
-def add_to_mask(cnt, flag):  # contour which will be added; if flag == 1 will clear binary mask
-    global binary_mask
-
-    if flag == 1:
-        binary_mask = np.zeros(img.shape[0:2])
-
-    for point in cnt:
-        binary_mask[int(point[0])][int(point[1])] = 1
-
-    return
-
-
-
 def save_to_file(cnt):
     global count
     global current_color
@@ -87,27 +65,6 @@ def save_to_file(cnt):
     trj_array = rtb.mstraj(trajectory, dt=0.002, qdmax=0.25, tacc=0.05)
     trj = {'points': trj_array.q, 'width': 1.0, 'color': label_color}
     data['trajectories'].append(trj)
-
-
-
-
-def depth_search(index, hierarchy, output_array):  #start point index; hierarchy of contours; the array of childs indexes
-    if hierarchy[index][3] == -1:
-        child_index = hierarchy[index][2]
-    else:
-        child_index = hierarchy[index][0]
-
-    if child_index == -1:
-        return output_array
-
-    if (output_array.shape[0] == 0):
-        output_array = np.array([child_index])
-    else:
-        output_array = np.append(output_array, child_index)
-
-    output_array = depth_search(child_index, hierarchy, output_array)
-    return output_array
-
 
 def get_contour(img, flag): # if flag is 0 will return all contours else will return internal contours
     #convert img to grey
@@ -185,11 +142,9 @@ def fill_contour(cnt, IMG):
         if index == -1:
             save_to_file(filled_contour)
             filled_contour = cnt
-            # add_to_mask(cnt, 1)
         else:
             cnt = np.roll(cnt, -index, axis=0)
             filled_contour = np.concatenate((filled_contour, cnt), axis=0)
-            # add_to_mask(cnt, 0)
     else:
         filled_contour = cnt
 

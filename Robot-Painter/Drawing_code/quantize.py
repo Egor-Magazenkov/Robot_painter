@@ -3,6 +3,8 @@ import numpy as np
 import cv2
 import scipy.spatial as sp
 
+import sys
+
 
 def plot_palette(colors, figname = 'colors pallete'):
     pallete = np.tile(colors[0], (100, 100, 1))
@@ -34,7 +36,20 @@ def generate_colors_order(colors):
 
 
 if __name__ == '__main__':
-    img = cv2.imread('/home/leo/Downloads/stable_diffusion_ex.png')
+
+    if len(sys.argv) == 1 or len(sys.argv) > 3:
+        print('Bad argument usage.\nUsage: python3 <path/to/image> (<number_of_colors>)')
+        sys.exit(1)
+    elif len(sys.argv) == 2:
+        print('Using default number of colors K = 12')
+        img = cv2.imread(sys.argv[1])
+        K = 12
+    else:
+        img = cv2.imread(sys.argv[1])
+        K = int(sys.argv[2])
+        print(f'Using {K} colors')
+
+    
     img = cv2.bilateralFilter(img, 7, 21,21)
     cv2.imshow('img', img)
 
@@ -53,7 +68,6 @@ if __name__ == '__main__':
     img_with_branch_2 = segmentation.mark_boundaries(out1, segments)
 
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-    K = 12
     img_LAB = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
     Z = img_LAB.reshape((-1,3))
     Z = np.float32(Z)
@@ -64,6 +78,7 @@ if __name__ == '__main__':
     res = center[label.flatten()]
     res2 = res.reshape((img.shape))
     res3 = cv2.cvtColor(res2, cv2.COLOR_Lab2BGR)
+    img_with_branch_3 = segmentation.mark_boundaries(res3, segments)
 
     center = cv2.cvtColor(np.array([center], np.uint8), cv2.COLOR_LAB2BGR)
     idx = generate_colors_order(center)
@@ -71,7 +86,7 @@ if __name__ == '__main__':
 
     
     cv2.imshow('Quantized image', res3)
-    cv2.imshow('Contours on image', img_with_branch_2)
+    cv2.imshow('Contours on image', img_with_branch_3)
     cv2.imwrite('./quantized_image.png', res3)
     cv2.imwrite('./mask.jpg', out1)
     cv2.imwrite('./branch.jpg', img_with_branch)
