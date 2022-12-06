@@ -109,7 +109,7 @@ def find_nearest_color(color):
 
 
 def find_nearest_point(control_point, cnt):
-    min = 100000
+    min = 10000000
     index = -1
     for i, point in enumerate(cnt):
         error = np.linalg.norm(control_point - point, 2)

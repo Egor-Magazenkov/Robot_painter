@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button
 from matplotlib.patches import Rectangle
 from tkinter import filedialog, Tk
-
+import roboticstoolbox.tools.trajectory as rtb
+import pickle
 
 
 # find the a & b points
@@ -62,8 +63,6 @@ def convert_path(path):
     
 def draw_paths(paths):
     canvas.add_patch(Rectangle((0, 0), canvas_size, canvas_size, fill = False))
-    zeros = cv2.resize(cv2.flip(cv2.cvtColor(cv2.imread('./result.png'), cv2.COLOR_BGR2RGB), 0), (400,400))
-    canvas.imshow(zeros)
     cnt = 0
     for path in paths:
         path = convert_path(path)
@@ -264,19 +263,19 @@ def submit(val):
         file.write("ksize\t"+ str(ksize)+ "\n")
         file.write("sigma\t"+ str(sigma)+ "\n")
         file.write("lambda\t"+ str(lambd)+ "\n")
-        
-    result = {'paths':[]}
-    def to_json(path):
-        trj = {'points': []}
+    result = {
+    'trajectories':[]
+    }
+    def to_pickle(path):
         path=convert_path(path)/1000
-        for point in path:
-            trj['points'].append({'p':list(point), 'width':1.0})
+        path_array = rtb.mstraj(path, dt=0.002, qdmax=0.25, tacc=0.05)
+        trj = {'points': path_array.q, 'width': 1.0, 'color': (0,0,0)}
         return trj
     for path in paths:
-        # path = convert_path(path)     
-        result['paths'].append(to_json(path))
-    with open(filepath + filename.split('.')[0] + '.json', 'w') as file:
-        file.write(json.dumps(result, indent=4))
+        result['trajectories'].append(to_pickle(path))
+    
+    with open('./contour_trjs.pickle', 'wb') as file:
+        pickle.dump(result, file)
 submit_button.on_clicked(submit)
 
 plt.show()
