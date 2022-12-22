@@ -177,7 +177,7 @@ if __name__ == '__main__':
         color = (int(color[0]), int(color[1]), int(color[2]))
         cv2.drawContours(img_with_contour, [contours[i]], 0, color, thickness=cv2.FILLED)
         cv2.imshow('filled_img', img_with_contour)
-        kernel = np.ones((4, 4), np.uint8)
+        kernel = np.ones((8, 8), np.uint8)
         dilation = cv2.dilate(img_with_contour, kernel, iterations = 1)
 
 

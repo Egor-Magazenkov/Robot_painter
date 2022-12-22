@@ -13,3 +13,4 @@ tensorflow==1.14.0
 keras-cv==0.3.4
 tensorflow-datasets==4.7.0
 mrcnn==0.2
+PyWavelets

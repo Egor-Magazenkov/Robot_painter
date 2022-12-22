@@ -58,7 +58,7 @@ if __name__ == '__main__':
     # square[int((y-img.shape[0])/2):int(y-(y-img.shape[0])/2), int((x-img.shape[1])/2):int(x-(x-img.shape[1])/2)] = img
     # img_squared = cv2.resize(square, (400,400))
 
-    segments = segmentation.slic(img, sigma=3, compactness=20, n_segments=100, start_label=1, convert2lab=True, max_num_iter=100)
+    segments = segmentation.slic(img, sigma=3, compactness=20, n_segments=1100, start_label=1, convert2lab=True, max_num_iter=100)
     blank_img = np.ones(img.shape)*255
 
     out1 = color.label2rgb(segments,  img, kind = 'avg', bg_label = 0)
