@@ -84,12 +84,12 @@ if __name__ == '__main__':
     idx = generate_colors_order(center)
     plot_palette(center[0][idx], 'centers')
 
-    
+
     cv2.imshow('Quantized image', res3)
     cv2.imshow('Contours on image', img_with_branch_3)
     cv2.imwrite('./quantized_image.png', res3)
     cv2.imwrite('./mask.jpg', out1)
     cv2.imwrite('./branch.jpg', img_with_branch)
-    
+    np.savetxt('segments.txt', segments, fmt='%d')
     cv2.waitKey(0)
     cv2.destroyAllWindows()
