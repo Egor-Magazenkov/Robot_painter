@@ -3,7 +3,7 @@ import cv2
 import roboticstoolbox.tools.trajectory as rtb
 import pickle
 
-MIN_CONTOUR_AREA = 1
+MIN_CONTOUR_AREA = 7
 
 data = {
     'trajectories':[]
@@ -16,7 +16,6 @@ def img_to_square(img):
     else: 
         square= np.zeros((x,y))
     square[int((y-img.shape[0])/2):int(y-(y-img.shape[0])/2), int((x-img.shape[1])/2):int(x-(x-img.shape[1])/2)] = img
-    # square = cv2.resize(square, (400, 400))
     return square
 
 
@@ -24,31 +23,23 @@ img = img_to_square(cv2.imread('/home/leo/Downloads/Kozlova_art.jpeg'))
 quantized_img = img_to_square(cv2.imread('./quantized_image.png'))
 final_labels = img_to_square(np.loadtxt('segments.txt'))
 COLORS = np.loadtxt('colors.txt', np.uint0)
-COLORS_ORDER_IDX = list(range(len(COLORS)))
 
-# img = cv2.imread('/home/leo/Downloads/Kozlova_art.jpeg')
-# quantized_img = cv2.imread('./quantized_image.png')
-# final_labels = np.loadtxt('segments.txt')
 compression_coeff = max(img.shape[0], img.shape[1])/400
 
 result = np.zeros(img.shape, dtype=np.uint8)
 cv2.imshow('quantized_img', quantized_img.astype(np.uint8))
-# np.savetxt('labels.txt', final_labels, fmt='%d')
-# cv2.waitKey(0)
 
 def save_to_file(cnt, color):
     global data, compression_coeff
-    # print(cnt)
     cnt = np.array([point[0] for point in cnt])
     trajectory = cnt.copy()/compression_coeff
     if len(trajectory) == 0:
         return 
-    # print(trajectory)
-    # trajectory[:, 1] = 400-trajectory[:, 1]
+    trajectory[:, 0] = 400-trajectory[:, 0]-1
     trajectory /= 1000.0
     # trj = {'points': trajectory, 'width': 1.0, 'color': np.where(COLORS==color)[0][0]}
 
-    trj_array = rtb.mstraj(trajectory, dt=0.002, qdmax=0.25, tacc=0.05)
+    trj_array = rtb.mstraj(trajectory, dt=0.02, qdmax=0.25, tacc=0.05)
 
     trj = {'points': trj_array.q, 'width': 1.0, 'color': np.where(COLORS==color)[0][0]}
     data['trajectories'].append(trj)
@@ -68,7 +59,7 @@ def find_nearest_point(control_point, cnt):
     return index
 
 
-def fill(mask, border, color_, brush=3):
+def fill(mask, border, color_, brush=2):
     global result_path
     # result =np.zeros(img.shape)
 
@@ -86,14 +77,10 @@ def fill(mask, border, color_, brush=3):
             result_path = np.concatenate((result_path, border), axis=0)
     else:
         result_path = border
-    
-    # int_mask = np.transpose(np.nonzero(mask))
-    # print(int_mask)
 
     for point in border:
         point = point[0]
         
-        # cv2.circle(result, point, radius=1, color_=color_)
         for r in range(-brush+1, brush):
             try: 
                 # if point + np.array([0,r]) in int_mask:
@@ -146,7 +133,6 @@ for l in np.unique(final_labels):
         continue
     mask = np.ones((quantized_img.shape[0], quantized_img.shape[1]), np.uint8) * 255
     mask[final_labels!=l] = 0
-    # mask = cv2.cvtColor(mask.astype(np.uint8), cv2.COLOR_BGR2GRAY)
     border, _ = cv2.findContours(mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
     border = border[0]
     region_colors = np.array([quantized_img[i][j] for i,j in zip(np.where(final_labels==l)[0], np.where(final_labels==l)[1])])
@@ -157,7 +143,8 @@ for l in np.unique(final_labels):
     fill(mask, border, color_)
 
 data['trajectories'].sort(key = lambda x: x['color'])
-print(data['trajectories'])
+print(len(data['trajectories']))
 with open('./trjs.pickle', 'wb') as file:
     pickle.dump(data, file)
+cv2.imwrite('result_filled.png', result)
 cv2.waitKey(0)
