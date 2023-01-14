@@ -58,80 +58,10 @@ def find_nearest_point(control_point, cnt):
 
     return index
 
-def erase_border(mask, border, color_, brush=2):
-    for point in border:
-        point = point[0]
-        
-        if brush == 0:
-            mask[point[1]][point[0]] = 0
-        else:
-            for r in range(-brush+1, brush):
-                try: 
-                    # if point + np.array([0,r]) in int_mask:
-                        # result[point[1]+r][point[0]] = (color_[0], color_[1], color_[2])
-                        mask[point[1] + r][point[0]] = 0
-                except IndexError:
-                    pass
-                    # print("BORDER WARNING")
-                try: 
-                    # if point + np.array([r,0]) in int_mask:
-                        # result[point[1]][point[0]+r] = (color_[0], color_[1], color_[2])
-                        mask[point[1]][point[0] + r] = 0
-                except IndexError:
-                    pass
-                    # print("BORDER WARNING")
-                try: 
-                    # if point + np.array([r,r]) in int_mask:
-                        # result[point[1]+r][point[0]+r] = (color_[0], color_[1], color_[2])
-                        mask[point[1] + r][point[0] + r] = 0
-                except IndexError:
-                    pass
-                    # print("BORDER WARNING")
-    border, _ = cv2.findContours(mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
-    if len(border)>0:
-        border = border[0]
-        fill(mask, border, color_, brush+1, to_draw=True)
 
-
-def draw_border(mask, border, color_, brush=2):
-    for point in border:
-        point = point[0]
-        
-        if brush == 0:
-            result[point[1]][point[0]] = (color_[0], color_[1], color_[2])
-            mask[point[1]][point[0]] = 0
-        else:
-            for r in range(-brush+1, brush):
-                try: 
-                    # if point + np.array([0,r]) in int_mask:
-                        result[point[1]+r][point[0]] = (color_[0], color_[1], color_[2])
-                        mask[point[1] + r][point[0]] = 0
-                except IndexError:
-                    pass
-                    # print("BORDER WARNING")
-                try: 
-                    # if point + np.array([r,0]) in int_mask:
-                        result[point[1]][point[0]+r] = (color_[0], color_[1], color_[2])
-                        mask[point[1]][point[0] + r] = 0
-                except IndexError:
-                    pass
-                    # print("BORDER WARNING")
-                try: 
-                    # if point + np.array([r,r]) in int_mask:
-                        result[point[1]+r][point[0]+r] = (color_[0], color_[1], color_[2])
-                        mask[point[1] + r][point[0] + r] = 0
-                except IndexError:
-                    pass
-                    # print("BORDER WARNING")
-
-
-def fill(mask, border, color_, brush=2, to_draw=False):
+def fill(mask, border, color_, brush=2):
     global result_path
     # result =np.zeros(img.shape)
-
-    if to_draw:
-        draw_border(mask, border, color_, brush)
-        return
 
     if cv2.contourArea(border) < MIN_CONTOUR_AREA:
         return
@@ -148,12 +78,35 @@ def fill(mask, border, color_, brush=2, to_draw=False):
     else:
         result_path = border
 
-    erase_border(mask, border, color_, brush-1)
+    for point in border:
+        point = point[0]
+        
+        for r in range(-brush+1, brush):
+            try: 
+                # if point + np.array([0,r]) in int_mask:
+                    result[point[1]+r][point[0]] = (color_[0], color_[1], color_[2])
+                    mask[point[1] + r][point[0]] = 0
+            except IndexError:
+                pass
+                # print("BORDER WARNING")
+            try: 
+                # if point + np.array([r,0]) in int_mask:
+                    result[point[1]][point[0]+r] = (color_[0], color_[1], color_[2])
+                    mask[point[1]][point[0] + r] = 0
+            except IndexError:
+                pass
+                # print("BORDER WARNING")
+            try: 
+                # if point + np.array([r,r]) in int_mask:
+                    result[point[1]+r][point[0]+r] = (color_[0], color_[1], color_[2])
+                    mask[point[1] + r][point[0] + r] = 0
+            except IndexError:
+                pass
+                # print("BORDER WARNING")
+        cv2.imshow('result', result)
+        cv2.imshow('amsk', mask)
 
-    cv2.imshow('result', result)
-    cv2.imshow('amsk', mask)
-
-    cv2.waitKey(1)
+        # cv2.waitKey(1)
 
             
    
