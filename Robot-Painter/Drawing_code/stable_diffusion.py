@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 import os
 import sys
 
-model = keras_cv.models.StableDiffusion(img_width=512, img_height=512)
 if len(sys.argv) != 3:
     print('Bad usage!\npython3 stable_diffusion.py <"prompt"> <path/to/output/dir/')
     sys.exit(1)
 prompt = sys.argv[1]
 result_directory = sys.argv[2]
+model = keras_cv.models.StableDiffusion(img_width=512, img_height=512)
 images = model.text_to_image(prompt, batch_size=3)
 
 

@@ -38,7 +38,7 @@ def generate_colors_order(colors):
 if __name__ == '__main__':
 
     if len(sys.argv) == 1 or len(sys.argv) > 3:
-        print('Bad argument usage.\nUsage: python3 <path/to/image> (<number_of_colors>)')
+        print('Bad argument usage.\nUsage: python3 quantize.py <path/to/image> (<number_of_colors>)')
         sys.exit(1)
     elif len(sys.argv) == 2:
         print('Using default number of colors K = 12')
@@ -49,9 +49,8 @@ if __name__ == '__main__':
         K = int(sys.argv[2])
         print(f'Using {K} colors')
 
-    
-    img = cv2.bilateralFilter(img, 7, 21,21)
-    cv2.imshow('img', img)
+    img = cv2.GaussianBlur(img, (15,15),0)
+    # img = cv2.bilateralFilter(img, 19, 21,21)
 
     # x=y=max(img.shape[0], img.shape[1])
     # square= np.ones((x,y,3), np.uint8)*255
@@ -85,6 +84,7 @@ if __name__ == '__main__':
     plot_palette(center[0][idx], 'centers')
 
 
+    cv2.imshow('img', img)
     cv2.imshow('Quantized image', res3)
     cv2.imshow('Contours on image', img_with_branch_3)
     cv2.imwrite('./quantized_image.png', res3)

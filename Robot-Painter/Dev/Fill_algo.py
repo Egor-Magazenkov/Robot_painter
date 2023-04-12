@@ -19,9 +19,9 @@ def img_to_square(img):
     return square
 
 
-img = img_to_square(cv2.imread('/home/leo/Downloads/Kozlova_art.jpeg'))
+img = img_to_square(cv2.imread('/home/leo/Downloads/pic2.jpeg'))
 quantized_img = img_to_square(cv2.imread('./quantized_image.png'))
-final_labels = img_to_square(np.loadtxt('segments.txt'))
+final_labels = img_to_square(np.loadtxt('segments_optimized.txt'))
 COLORS = np.loadtxt('colors.txt', np.uint0)
 
 compression_coeff = max(img.shape[0], img.shape[1])/400
@@ -59,7 +59,7 @@ def find_nearest_point(control_point, cnt):
     return index
 
 
-def fill(mask, border, color_, brush=2):
+def fill(mask, border, color_, brush=3):
     global result_path
     # result =np.zeros(img.shape)
 
@@ -104,7 +104,7 @@ def fill(mask, border, color_, brush=2):
                 pass
                 # print("BORDER WARNING")
         cv2.imshow('result', result)
-        cv2.imshow('amsk', mask)
+        # cv2.imshow('amsk', mask)
 
         # cv2.waitKey(1)
 
@@ -128,7 +128,7 @@ def fill(mask, border, color_, brush=2):
     result_path = np.empty((0, 1, 2))
 
 
-for l in np.unique(final_labels):
+for l in np.unique(final_labels.flatten()):
     if l == 0:
         continue
     mask = np.ones((quantized_img.shape[0], quantized_img.shape[1]), np.uint8) * 255
@@ -139,6 +139,7 @@ for l in np.unique(final_labels):
     clrs, indexes, counts = np.unique(region_colors, axis=0, return_index=True, return_counts=True)
     color_index = indexes[np.argmax(counts)]
     color_ = region_colors[color_index]
+    # color_ = quantized_img[border[0][0][1]][border[0][0][0]]
     result_path = np.empty((0, 1, 2))
     fill(mask, border, color_)
 

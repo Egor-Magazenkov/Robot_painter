@@ -63,6 +63,7 @@ def convert_path(path):
     
 def draw_paths(paths):
     canvas.add_patch(Rectangle((0, 0), canvas_size, canvas_size, fill = False))
+    #canvas.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     cnt = 0
     for path in paths:
         path = convert_path(path)
@@ -98,7 +99,7 @@ def image_processing(img,  smooth=95, scale=192, blur=5, sigma=5):
 
 
 
-canvas_size = 400
+canvas_size = 210
 paths = []
 filepath = ''
 filename = ''
