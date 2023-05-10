@@ -45,18 +45,34 @@ cv2.imshow('quantized_img', quantized_img.astype(np.uint8))
 def save_to_file(cnt, color, c_coeff=compression_coeff):
     """Convert path to fit picture on canvas and put it into result dictionary."""
     global data
-    cnt = np.array([point[0] for point in cnt])
-    trajectory = cnt.copy() / c_coeff
-    if len(trajectory) == 0:
+
+    if len(cnt) == 0:
         return
-    #trajectory[:, 0] = 400 - trajectory[:, 0] - 1
-    trajectory /= 1000.0
-    # trj = {'points': trajectory, 'width': 1.0, 'color': np.where(COLORS==color)[0][0]}
 
-    trj_array = rtb.mstraj(trajectory, dt=0.02, qdmax=0.25, tacc=0.05)
+    def trajectory2brushstroke(trj, max_length=50):
+        """Split the long trajectory into small strokes reproducible with brush and paint."""
+        length = cv2.arcLength(trj, True)
+        n = int(np.ceil(length/max_length))
+        k, m = divmod(len(trj), n)
+        strokes = [trj[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n)]
+        return strokes
 
-    trj = {'points': trj_array.q, 'width': 1.0, 'color': np.where(COLORS==color)[0][0]}
-    data['trajectories'].append(trj)
+
+    cnts = trajectory2brushstroke(cnt)
+    for cnt in cnts:
+        print(cv2.arcLength(np.array(cnt), False))
+        cnt = np.array([point[0] for point in cnt])
+        trajectory = cnt.copy() / c_coeff
+        #trajectory[:, 0] = 400 - trajectory[:, 0] - 1
+        trajectory /= 1000.0
+        # trj = {'points': trajectory, 'width': 1.0, 'color': np.where(COLORS==color)[0][0]}
+
+
+
+        trj_array = rtb.mstraj(trajectory, dt=0.02, qdmax=0.25, tacc=0.05)
+
+        trj = {'points': trj_array.q, 'width': 1.0, 'color': np.where(COLORS==color)[0][0]}
+        data['trajectories'].append(trj)
 
 def find_nearest_point(control_point, cnt):
     """Get index of the nearest point of contour to control_point."""
