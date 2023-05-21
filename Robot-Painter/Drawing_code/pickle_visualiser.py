@@ -17,13 +17,14 @@ else:
 with open(PICKLE_FILE, 'rb') as pickle_file:
     d = pickle.load(pickle_file)
 data = d['trajectories']
-print(data)
 zeros = np.zeros((400,400,3), dtype=np.uint8)
 for t in data:
     for point in t['points']:
         point = point*1000
-        zeros[int(point[1])][int(point[0])] = COLORS[t['color']]
+        cv2.circle(zeros, (int(point[0]), int(point[1])), t['width'], t['color'], -1)
+        #zeros[int(point[1])][int(point[0])] = COLORS[t['color']]
         #zeros[int(point[1])][int(point[0])] = (255,255,255)
     cv2.imshow('s', zeros)
     cv2.waitKey(1)
 cv2.waitKey(0)
+cv2.imwrite('result.png', zeros)
