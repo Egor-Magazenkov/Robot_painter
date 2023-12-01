@@ -45,3 +45,4 @@ while True:
         cv2.imwrite('result.png', zeros)
         cv2.destroyAllWindows()
         break
+

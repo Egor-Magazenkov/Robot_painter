@@ -98,6 +98,7 @@ def convert_path(path):
     """Convert path to fit picture on canvas."""
     res = path/COMPRESSION_COEFF
     # flip image
+
     #res[:, 1] = CANVAS_SIZE - res[:, 1] % CANVAS_SIZE
     res = np.round(res/2, 1) * 2
     res = np.array([res[i] for i in sorted(np.unique(res, return_index=True, axis=0)[1])])
@@ -143,6 +144,7 @@ def image_processing(src,  smooth=95, scale=192, blur=5, sigma=5):
 
 
 
+
 CANVAS_SIZE = 300
 QUANTIZED_IMAGE = cv2.flip(cv2.resize(cv2.cvtColor(cv2.imread('result_filled.png'), cv2.COLOR_BGR2RGB), (CANVAS_SIZE,CANVAS_SIZE)), 0)
 paths = []
@@ -152,7 +154,6 @@ COMPRESSION_COEFF = None
 IMAGE = None
 IMG_WIDTH = None
 face_elements = None
-
 
 
 
@@ -170,10 +171,12 @@ def img_to_square(src):
 
 def start():
     """Begin the image processing algos."""
+
     global IMG_WIDTH, face_elements, COMPRESSION_COEFF, IMAGE
     IMAGE = img_to_square(cv2.imread(FILEPATH+FILENAME, 0))
     #IMAGE = cv2.imread(FILEPATH+FILENAME, 0)
     #face_elements = find_face_parts(cv2.imread('/home/leo/Downloads/Belashenkov.jpg'))
+
     # IMAGE = sharpening(IMAGE)
     IMG_WIDTH = IMAGE.shape[0]
     COMPRESSION_COEFF = IMG_WIDTH/CANVAS_SIZE
@@ -234,7 +237,6 @@ def update(val):
     result=[]
 
     length = length_slider.val
-
     result += gabor_filter(ksize_slider.val, sigma_slider.val, lambda_slider.val, length)
 
     image = image_processing(IMAGE.copy(), blur=blur_slider.val)
@@ -319,14 +321,25 @@ def submit(val):
         file.write("sigma\t"+ str(sigma)+ "\n")
         file.write("lambda\t"+ str(lambd)+ "\n")
     result = {'trajectories':[]}
+
+    with open('./trjs.pickle', 'rb') as file:
+        result = pickle.load(file)
+        for i, trj in reversed(list(enumerate(result['trajectories']))):
+            if trj['color'] == 0:
+                result['trajectories'].pop(i)
+            if trj['color'] != 0:
+                break
     def to_pickle(path):
         path=convert_path(path)
         path[:, 1] = CANVAS_SIZE - path[:, 1] % CANVAS_SIZE
         path_array = rtb.mstraj(path/1000, dt=0.002, qdmax=0.25, tacc=0.05)
+
         trj = {'points': path_array.q, 'width': 1.0, 'color': 239}
+
         return trj
     for path in paths[::-1]:
         result['trajectories'].append(to_pickle(path))
+
     #with open('./trjs.pickle', 'wb') as file:
     #    pickle.dump(result, file)
 
@@ -337,6 +350,7 @@ def submit(val):
 
     with open('./trjs.pickle', 'wb') as file:
         pickle.dump(quantized_pickle, file)
+
 submit_button.on_clicked(submit)
 
 plt.show()
