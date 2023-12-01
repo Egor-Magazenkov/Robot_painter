@@ -6,6 +6,7 @@ import cv2
 import roboticstoolbox.tools.trajectory as rtb
 
 MIN_CONTOUR_AREA = 7
+CANVAS_SIZE = 300
 
 data = {
     'trajectories':[]
@@ -36,8 +37,7 @@ else:
     quantized_img = img_to_square(cv2.imread(sys.argv[2]))
     final_labels = img_to_square(np.loadtxt(sys.argv[3]))
     COLORS = np.loadtxt(sys.argv[4], np.uint0)
-
-compression_coeff = max(img.shape[0], img.shape[1])/400
+compression_coeff = max(img.shape[0], img.shape[1])/CANVAS_SIZE
 
 result = np.zeros(img.shape, dtype=np.uint8)
 cv2.imshow('quantized_img', quantized_img.astype(np.uint8))
@@ -50,6 +50,7 @@ def save_to_file(cnt, color, c_coeff=compression_coeff):
     if len(trajectory) == 0:
         return
     #trajectory[:, 0] = 400 - trajectory[:, 0] - 1
+    trajectory[:, 1] = CANVAS_SIZE - trajectory[:, 1] % CANVAS_SIZE
     trajectory /= 1000.0
     # trj = {'points': trajectory, 'width': 1.0, 'color': np.where(COLORS==color)[0][0]}
 
