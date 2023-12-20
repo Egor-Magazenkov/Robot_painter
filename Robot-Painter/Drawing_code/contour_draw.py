@@ -1,4 +1,6 @@
 """Code for extracting features from image in bezier curves"""
+import mediapipe as mp 
+import math 
 from tkinter import filedialog, Tk
 import pickle
 import cv2
@@ -8,6 +10,40 @@ from matplotlib.widgets import Slider, Button
 from matplotlib.patches import Rectangle
 import roboticstoolbox.tools.trajectory as rtb
 
+def find_face_parts(img):
+    mp_face_mesh = mp.solutions.face_mesh
+
+    face_parts_ = []
+    with mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5) as face_mesh:
+        image = cv2.cvtColor(cv2.flip(img, 1), cv2.COLOR_BGR2RGB)
+        results = face_mesh.process(image)
+        if results.multi_face_landmarks:
+            for face_landmarks in results.multi_face_landmarks:
+
+                idx_to_coordinates = {}
+                for idx, landmark in enumerate(face_landmarks.landmark):
+                    landmark_px = (min(math.floor(landmark.x * image.shape[0]), image.shape[0] - 1), min(math.floor(landmark.y * image.shape[1]), image.shape[1] - 1))
+                    if landmark_px:
+                        idx_to_coordinates[idx] = landmark_px
+
+                def convert_points(f):
+                    f = evaluate_bezier(f, 4, -1)
+                    f[:,0] = f[:,0]-2*f[:,0]+img.shape[0]
+                    return f
+
+                face_oval = convert_points(np.array([idx_to_coordinates[i] for i in [389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127]]))
+                left_eye = convert_points(np.array([idx_to_coordinates[i] for i in [33,246,161,160,159,158,157,173,133,155,154,153,145,144,163,7,33]]))
+                right_eye = convert_points(np.array([idx_to_coordinates[i] for i in  [263,466,388,387,386,385,384,398,362,382,381,380,374,373,390,249,263]]))
+                inner_lip = convert_points(np.array([idx_to_coordinates[i] for i in  [78,191,80,81,82,13,312,311,310,415,308,324,318,402,317,14,87,178,88,95,78]]))
+                outer_lip = convert_points(np.array([idx_to_coordinates[i] for i in  [61,185,40,39,37,0,267,269,270,409,291,375,321,405,314,17,84,181,91,146,61]]))
+                left_eyebrow = convert_points(np.array([idx_to_coordinates[i] for i in  [55,65,52,53,46]]))
+                right_eyebrow = convert_points(np.array([idx_to_coordinates[i] for i in  [285,295,282,283,276]]))
+                nose = convert_points(np.array([idx_to_coordinates[i] for i in  [122,174,198,49,64, 59, 60,20,242,94,462,250,290,289,294,279,420,399,351]]))
+                additional_nose = convert_points(np.array([idx_to_coordinates[i] for i in  [19,1,4]]))
+                face_parts_ += [additional_nose,nose, left_eye, right_eye, inner_lip, outer_lip, left_eyebrow, right_eyebrow]
+        else:
+            print("NO FACE")
+    return face_parts_
 
 def get_bezier_coef(points):
     """Connect ordered set of points with C2 continuous bezier curves."""
@@ -62,7 +98,8 @@ def convert_path(path):
     """Convert path to fit picture on canvas."""
     res = path/COMPRESSION_COEFF
     # flip image
-    res[:, 1] = CANVAS_SIZE - res[:, 1] % CANVAS_SIZE
+
+    #res[:, 1] = CANVAS_SIZE - res[:, 1] % CANVAS_SIZE
     res = np.round(res/2, 1) * 2
     res = np.array([res[i] for i in sorted(np.unique(res, return_index=True, axis=0)[1])])
     return res
@@ -70,9 +107,13 @@ def convert_path(path):
 def draw_paths(points):
     """Plot points onto the canvas."""
     canvas.add_patch(Rectangle((0, 0), CANVAS_SIZE, CANVAS_SIZE, fill = False))
+    canvas.imshow(QUANTIZED_IMAGE)
+    canvas.set_axis_off()
     cnt = 0
+    global face_elements
     for path in points:
         path = convert_path(path)
+        path[:, 1] = CANVAS_SIZE - path[:, 1] % CANVAS_SIZE
         canvas.plot(path[:,0], path[:,1], linewidth=1, color='black')
         cnt += len(path)
     fig.canvas.draw()
@@ -103,13 +144,17 @@ def image_processing(src,  smooth=95, scale=192, blur=5, sigma=5):
 
 
 
-CANVAS_SIZE = 400
+
+CANVAS_SIZE = 300
+QUANTIZED_IMAGE = cv2.flip(cv2.resize(cv2.cvtColor(cv2.imread('result_filled.png'), cv2.COLOR_BGR2RGB), (CANVAS_SIZE,CANVAS_SIZE)), 0)
 paths = []
 FILEPATH = ''
 FILENAME = ''
 COMPRESSION_COEFF = None
 IMAGE = None
 IMG_WIDTH = None
+face_elements = None
+
 
 
 def img_to_square(src):
@@ -126,8 +171,12 @@ def img_to_square(src):
 
 def start():
     """Begin the image processing algos."""
-    global IMG_WIDTH, COMPRESSION_COEFF, IMAGE
+
+    global IMG_WIDTH, face_elements, COMPRESSION_COEFF, IMAGE
     IMAGE = img_to_square(cv2.imread(FILEPATH+FILENAME, 0))
+    #IMAGE = cv2.imread(FILEPATH+FILENAME, 0)
+    #face_elements = find_face_parts(cv2.imread('/home/leo/Downloads/Belashenkov.jpg'))
+
     # IMAGE = sharpening(IMAGE)
     IMG_WIDTH = IMAGE.shape[0]
     COMPRESSION_COEFF = IMG_WIDTH/CANVAS_SIZE
@@ -188,7 +237,6 @@ def update(val):
     result=[]
 
     length = length_slider.val
-
     result += gabor_filter(ksize_slider.val, sigma_slider.val, lambda_slider.val, length)
 
     image = image_processing(IMAGE.copy(), blur=blur_slider.val)
@@ -272,6 +320,8 @@ def submit(val):
         file.write("ksize\t"+ str(ksize)+ "\n")
         file.write("sigma\t"+ str(sigma)+ "\n")
         file.write("lambda\t"+ str(lambd)+ "\n")
+    result = {'trajectories':[]}
+
     with open('./trjs.pickle', 'rb') as file:
         result = pickle.load(file)
         for i, trj in reversed(list(enumerate(result['trajectories']))):
@@ -283,13 +333,24 @@ def submit(val):
         path=convert_path(path)
         path[:, 1] = CANVAS_SIZE - path[:, 1] % CANVAS_SIZE
         path_array = rtb.mstraj(path/1000, dt=0.002, qdmax=0.25, tacc=0.05)
-        trj = {'points': path_array.q, 'width': 1.0, 'color': 0}
+
+        trj = {'points': path_array.q, 'width': 1.0, 'color': 239}
+
         return trj
-    for path in paths:
+    for path in paths[::-1]:
         result['trajectories'].append(to_pickle(path))
 
+    #with open('./trjs.pickle', 'wb') as file:
+    #    pickle.dump(result, file)
+
+    with open('./trjs.pickle', 'rb') as file:
+        quantized_pickle = pickle.load(file)
+
+    quantized_pickle['trajectories'] += result['trajectories']
+
     with open('./trjs.pickle', 'wb') as file:
-        pickle.dump(result, file)
+        pickle.dump(quantized_pickle, file)
+
 submit_button.on_clicked(submit)
 
 plt.show()
